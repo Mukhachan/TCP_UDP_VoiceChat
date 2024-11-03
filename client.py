@@ -22,8 +22,9 @@ client_color = random.choice(colors)
 
 
 s = socket.socket()
-print(f"[*] Connecting to {SERVER_HOST}:{SERVER_PORT}...")
-s.connect((SERVER_HOST, SERVER_PORT))
+host_ip = input("input server ip: ")
+print(f"[*] Connecting to {host_ip}:{SERVER_PORT}...")
+s.connect((host_ip, SERVER_PORT))
 print("[+] Connected.")
 
 name = input("Enter your name: ")

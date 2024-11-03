@@ -3,7 +3,8 @@ import random
 from threading import Thread
 from datetime import datetime
 from colorama import Fore, init, Back
-
+import pyaudio
+from playsound import playsound
 from config import SERVER_HOST, SERVER_PORT, separator_token, CHUNK
 from os import system
 
@@ -11,9 +12,9 @@ system("clear")
 init()
 
 
-colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX, 
+colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, 
     Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX, Fore.LIGHTGREEN_EX, 
-    Fore.LIGHTMAGENTA_EX, Fore.LIGHTRED_EX, Fore.LIGHTWHITE_EX, 
+    Fore.LIGHTMAGENTA_EX, Fore.LIGHTRED_EX, 
     Fore.LIGHTYELLOW_EX, Fore.MAGENTA, Fore.RED, Fore.WHITE, Fore.YELLOW
 ]
 
@@ -28,6 +29,7 @@ s.connect((host_ip, SERVER_PORT))
 print("[+] Connected.")
 
 name = input("Enter your name: ")
+s.send(name.encode())
 
 def listen_for_messages():
     while True:
@@ -35,6 +37,9 @@ def listen_for_messages():
             message = s.recv(CHUNK).decode()
         except ConnectionResetError:
             s.connect((host_ip, SERVER_PORT))
+        if "connected" in message and "System" in message:
+            snd = Thread(target=playsound, args=('sounds/vhod.mp3', ))
+            snd.start()
         print("\n"+message) if message else None
 t = Thread(target=listen_for_messages)
 t.daemon = True

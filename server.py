@@ -1,6 +1,7 @@
 from datetime import datetime
 import io
 from pprint import pprint
+from colorama import Fore
 import pyaudio
 import socket
 import numpy as np
@@ -16,34 +17,46 @@ system("clear")
 
 client_sockets = []
 
+def messageSending(msg: str, isFirst: bool, isDisconnected: str=False):
+    ln_clients = len(client_sockets)
+    for i in range(ln_clients - 1):
+        try:
+            if isDisconnected:
+                client_sockets[i]["connection"].send((isDisconnected + " disconnected").encode())
+            else:
+                client_sockets[i]["connection"].send((Fore.LIGHTBLACK_EX + "[System]: " + msg + " connected!" + "\n").encode() if isFirst else msg.encode())
+        except Exception as e:
+            print("index", i)
+            client_sockets.remove(client_sockets[i])
+            print(f"[!] Error: {e}")
+            break
+
 def listen_for_client(cs: socket.socket, client_address: tuple):
+    isFirst = True
     while True:
         try:
             msg = cs.recv(CHUNK).decode()
         except Exception as e:
             print(f"[!] Error: {e}")
-            dic = {
-            "connection" : cs, 
-            "address" : client_address
-            }
-            if dic in client_sockets: 
-                client_sockets.remove(dic)
+            for i in range(len(client_sockets) - 1):
+                if client_sockets[i]["address"] == client_address:
+                    messageSending(msg, isFirst, isDisconnected=client_sockets[i]["nickname"])
+                    print(client_sockets)
+                    client_sockets.remove(client_sockets[i])
+            break
         else:
             # if we received a message, replace the <SEP> 
             # token with ": " for nice printing
             if msg != "":
                 msg = msg.replace(separator_token, ": ")
                 print(msg)
-        i = 0
-        ln_clients = len(client_sockets)
-        while i < ln_clients:
-            try:
-                client_sockets[i]["connection"].send(msg.encode())
-                i+=1
-            except Exception as e:
-                print("index", i)
-                client_sockets.remove(client_sockets[i])
-                print(f"[!] Error: {e}")
+
+        if isFirst:
+            for i in range(len(client_sockets)):
+                if client_sockets[i]["address"] == client_address:
+                    client_sockets[i]["nickname"] = msg
+        messageSending(msg, isFirst)
+        isFirst = False
 
 
 sock = socket.socket(socket.AF_INET,
@@ -64,7 +77,8 @@ while True:
         print("adding")
         client_sockets.append({
             "connection" : client_socket, 
-            "address" : client_address})
+            "address" : client_address,
+            "nickname": None})
     else:
         continue
     t = Thread(target=listen_for_client, args=(client_socket, client_address))

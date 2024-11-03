@@ -1,0 +1,1 @@
+print(str(b'Z\x00\x10\t\x00\x042.1\x00\x00', encoding='UTF-8'))

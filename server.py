@@ -14,25 +14,37 @@ from os import system
 
 system("clear")
 
-client_sockets = set()
+client_sockets = []
 
-def listen_for_client(cs: socket.socket):
+def listen_for_client(cs: socket.socket, client_address: tuple):
     while True:
         try:
             msg = cs.recv(CHUNK).decode()
         except Exception as e:
             print(f"[!] Error: {e}")
-            if client_sockets: 
-                client_sockets.remove(cs)
+            dic = {
+            "connection" : cs, 
+            "address" : client_address
+            }
+            if dic in client_sockets: 
+                client_sockets.remove(dic)
         else:
             # if we received a message, replace the <SEP> 
             # token with ": " for nice printing
-            msg = msg.replace(separator_token, ": ")
-            print(msg)
-        for client_socket in client_sockets:
-            client_socket: socket.socket
-            
-            client_socket.send(msg.encode())
+            if msg != "":
+                msg = msg.replace(separator_token, ": ")
+                print(msg)
+        i = 0
+        ln_clients = len(client_sockets)
+        while i < ln_clients:
+            try:
+                client_sockets[i]["connection"].send(msg.encode())
+                i+=1
+            except Exception as e:
+                print("index", i)
+                client_sockets.remove(client_sockets[i])
+                print(f"[!] Error: {e}")
+
 
 sock = socket.socket(socket.AF_INET,
                     socket.SOCK_STREAM)
@@ -48,9 +60,14 @@ while True:
     client_socket, client_address = sock.accept()
     print(f"[+] {client_address} connected.")
 
-    client_sockets.add(client_socket)
-
-    t = Thread(target=listen_for_client, args=(client_socket,))
+    if client_socket not in client_sockets:
+        print("adding")
+        client_sockets.append({
+            "connection" : client_socket, 
+            "address" : client_address})
+    else:
+        continue
+    t = Thread(target=listen_for_client, args=(client_socket, client_address))
 
     t.daemon = True
     t.start()

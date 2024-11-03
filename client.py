@@ -31,17 +31,20 @@ name = input("Enter your name: ")
 
 def listen_for_messages():
     while True:
-        message = s.recv(CHUNK).decode()
+        try:
+            message = s.recv(CHUNK).decode()
+        except ConnectionResetError:
+            s.connect((host_ip, SERVER_PORT))
         print("\n"+message) if message else None
-
 t = Thread(target=listen_for_messages)
 t.daemon = True
 t.start()
 
 while True:
     to_send = input("send message: ")
-    if to_send.lower() == 'q':
-        break
+    if to_send.lower() == 'q': break
+    elif to_send == "": continue
+    
     date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S') 
     to_send = f"{client_color}[{date_now}] {name}{separator_token}{to_send}{Fore.RESET}"
     s.send(to_send.encode())

@@ -1,9 +1,3 @@
-dic = {
-    "key" : ...
-}
-
-dic2 = {
-    "key" : 1
-}
-
-print(dic==dic2)
+import os, sys
+ 
+print(os.name, sys.platform)

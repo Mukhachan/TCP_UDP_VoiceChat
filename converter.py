@@ -13,7 +13,7 @@ def RAW_2_OGG(raw_chunk):
   return bytes(byte_io.getbuffer())
 
 
-def OGG_2_RAW(ogg_chunk):
+def OGG_2_RAW(ogg_chunk) -> np.float32:
   byte_io = io.BytesIO()
   byte_io.write(ogg_chunk)
   byte_io.seek(0)

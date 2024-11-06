@@ -1,12 +1,12 @@
 import pyaudio
 
-
-CHUNK=1024
+AUDIO_BLOCK = 512
+CHUNK=8192
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 24000
+RATE = 28000
+SAMPLE_WIDTH = 2 # 16 бит
 
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 9100
-
-separator_token = "<SEP>" # we will use this to separate the client name & message
+MAX_CONNECTIONS = 10

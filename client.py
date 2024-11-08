@@ -68,8 +68,11 @@ class GetAudio:
  
     def main(self):
         for data in self.get_audio():
-            if data['data'] != "" and SOUND_CALLBACK and data['nickname'] == self.name:
-                self.p_read.write(frames=data['data'], num_frames=data['samplerate'])
+            if data['data'] != "":
+                if (SOUND_CALLBACK and data['nickname'] == self.name) or data['nickname'] != self.name:
+                    self.p_read.write(frames=data['data'], num_frames=data['samplerate'])
+
+
 
 class SendMessages:
     def __init__(self, sock: socket.socket, name: str) -> None:

@@ -1,15 +1,13 @@
 from datetime import datetime
+import json
 import base64, pickle
-from pprint import pprint
 import socket
 import pyaudio
 from pydub import AudioSegment
-from pydub.playback import play
 from config import *
 import numpy as np
 import soundfile as sf
 import threading
-from multiprocessing import Process
 from os import system
 import sys
 
@@ -28,14 +26,28 @@ class GetAudio:
         self.data_vhod, self.samplerate_vhod = sf.read('sounds/vhod.ogg')
         self.data_vihod, self.samplerate_vihod = sf.read('sounds/vihod.ogg')
 
+        self.buffer = ''
+
+
     def get_audio(self):
         """
             Генератор, который возвращает данные из потока аудио.
         """
         while True:
-            message = sock.recv(CHUNK) # Получение сообщения
+            message = sock.recv(CHUNK) # Получение сообщениe
+
             if message != "": 
-                message = pickle.loads(base64.b64decode(message.decode()))
+                if SEP not in message:
+                    self.buffer += message
+                    continue
+                else:
+                    self.buffer = message.split(SEP)[1]
+                message = json.loads((
+                        self.buffer+message.split(SEP)[0]
+                    ).decode("utf-8")) 
+                               
+
+                message['samplerate'] = AUDIO_BLOCK
                 if message['event'] == 'connect':
                     print(f"{datetime.now()} - {message['nickname']} connected!")
                     # message['data'] = self.data_vhod
@@ -49,15 +61,15 @@ class GetAudio:
                     ...
 
                 elif message['event'] == 'Message':
-                    message['samplerate'] = AUDIO_BLOCK
-                
-                yield message
+                    message['data'] = base64.b64decode(message['data'])
+                    print(message)
+                    yield message
 
  
     def main(self):
         for data in self.get_audio():
             if data['data'] != "":
-                self.p_read.write(data['data'], data['samplerate'])
+                self.p_read.write(frames=data['data'], num_frames=data['samplerate'])
 
 class SendMessages:
     def __init__(self, sock: socket.socket, name: str) -> None:
@@ -71,10 +83,10 @@ class SendMessages:
         try:
             msg = {
                 "nickname" : self.name,
-                "data" : "",
+                "data" : 1449+len(self.name.encode("utf-8")),
                 "event" : "connect",
             }
-            msg = base64.b64encode(pickle.dumps(msg))
+            msg = json.dumps(msg).encode("utf-8")+SEP
             self.sock.send(msg)
             return {
                 'Status' : True,
@@ -97,7 +109,7 @@ class SendMessages:
                 "data" : "",
                 "event" : "disconnect",
             }
-            msg = base64.b64encode(pickle.dumps(msg))
+            msg = json.dumps(msg).encode("utf-8")+SEP
             self.sock.send(msg)
             return {
                 'Status' : True,
@@ -115,12 +127,19 @@ class SendMessages:
             Отправляем блок аудиоданных
         """
         try:
+            # data_block = AudioSegment(
+            #                 data=data_block, 
+            #                 sample_width=SAMPLE_WIDTH,
+            #                 frame_rate=RATE,
+            #                 channels=CHANNELS
+            # )
+
             msg = {
             "nickname" : self.name,
-            "data" : data_block,
+            "data" : base64.b64encode(data_block).decode("utf-8"),
             "event" : "Message",
             }
-            msg = base64.b64encode(pickle.dumps(msg))
+            msg = json.dumps(msg).encode("utf-8")+SEP
             self.sock.send(msg)
 
             return {
@@ -184,7 +203,7 @@ class RecordAudio:
             # self.pout.terminate()
 
     def main(self):
-        print("Запись началась. Нажмите Ctrl+C для остановки.")
+        print("Вы подключились к серверу. Нажмите Ctrl+C для остановки.")
         try:
             for audio_block in self.record_audio():
                 # Отправляем аудио блок

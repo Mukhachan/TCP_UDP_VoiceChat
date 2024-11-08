@@ -1,4 +1,5 @@
 import base64
+import json
 import pickle
 import socket
 from config import *
@@ -15,6 +16,7 @@ class Server:
         print("Server started")
         self.sock.listen(MAX_CONNECTIONS)
         self.users = []
+        self.buffer = ''
 
     def sendMsgs(self, from_user_addr: tuple, data: bytes):
         """ Отправляем сообщения всем подключенным клиентам """
@@ -27,8 +29,16 @@ class Server:
             try:
                 msg = from_user_sock.recv(CHUNK)
                 if msg: 
-                    msg_dec = pickle.loads(base64.b64decode(msg.decode()))
+                    if SEP not in msg:
+                        self.buffer += msg
+                        continue
+                    else:
+                        self.buffer = msg.split(SEP)[1]
 
+                    msg_dec = json.loads((
+                            self.buffer+msg.split(SEP)[0]
+                        ).decode("utf-8"))
+                    
                     if msg_dec['event'] == "disconnect":
                         from_user_sock.close()
                         self.users.remove(from_user_addr)
@@ -37,15 +47,17 @@ class Server:
                     elif msg_dec['event'] == "connect":
                         print(msg_dec)
                     elif msg_dec['event'] == "Message":
+                        print("Длина пакета", len(msg))
                         self.sendMsgs(from_user_addr, msg)
                     else:
                         print("Неизвестный запрос")
+                        
                     # отправляем звук пользователю обратно
                     from_user_sock.send(msg)
                 else: continue
 
             except Exception as e:
-                print(f"Error in listen_for_client: {e}")
+                print(f"Error in checkMsgs: {e}")
                 self.users.remove(from_user_addr)
                 break
 

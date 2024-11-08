@@ -22,7 +22,7 @@ class Server:
         """ Отправляем сообщения всем подключенным клиентам """
         for user in self.users:
             if  user != from_user_addr:
-                self.sock.sendto(data, user[0])
+                self.sock.sendto(data, user)
 
     def checkMsgs(self, from_user_sock: socket.socket, from_user_addr: tuple):
         while True:

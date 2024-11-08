@@ -51,15 +51,16 @@ class Server:
                         self.sendMsgs(from_user_addr, msg)
                     else:
                         print("Неизвестный запрос")
-                        
+
                     # отправляем звук пользователю обратно
                     from_user_sock.send(msg)
                 else: continue
 
             except Exception as e:
                 print(f"Error in checkMsgs: {e}")
-                self.users.remove(from_user_addr)
-                break
+                if "Connection reset" in str(e) or "roken pipe" in str(e):
+                    self.users.remove(from_user_addr)
+                    break
 
     def main(self):
         while len(self.users)<=MAX_CONNECTIONS:

@@ -14,7 +14,7 @@ import sys
 
 
 class GetAudio:
-    def __init__(self, sock: socket.socket) -> None:
+    def __init__(self, sock: socket.socket, name: str) -> None:
         self.sock = sock
         self.pout = pyaudio.PyAudio()
         self.p_read = self.pout.open(output=True,
@@ -26,6 +26,7 @@ class GetAudio:
         self.data_vhod, self.samplerate_vhod = sf.read('sounds/vhod.ogg')
         self.data_vihod, self.samplerate_vihod = sf.read('sounds/vihod.ogg')
 
+        self.name = name
         self.buffer = ''
 
 
@@ -35,7 +36,6 @@ class GetAudio:
         """
         while True:
             message = sock.recv(CHUNK) # Получение сообщениe
-
             if message != "": 
                 if SEP not in message:
                     self.buffer += message
@@ -68,7 +68,7 @@ class GetAudio:
  
     def main(self):
         for data in self.get_audio():
-            if data['data'] != "":
+            if data['data'] != "" and SOUND_CALLBACK and data['nickname'] == self.name:
                 self.p_read.write(frames=data['data'], num_frames=data['samplerate'])
 
 class SendMessages:
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     print("[+] Connected.")
     name = input("send your name: ")
 
-    GetAudio_ex = GetAudio(sock)
+    GetAudio_ex = GetAudio(sock, name)
     RecordAudio_ex = RecordAudio("sounds/rec_new.ogg", sock, name)
 
     try:

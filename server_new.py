@@ -12,7 +12,7 @@ class Server:
     def __init__(self):
         self.sock = socket.socket()
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind((SERVER_HOST, SERVER_PORT))
+        self.sock.bind((SERVER_HOST_BIND, SERVER_PORT))
         print("Server started")
         self.sock.listen(MAX_CONNECTIONS)
         self.users = []
@@ -48,10 +48,13 @@ class Server:
                         print(msg_dec)
                     elif msg_dec['event'] == "Message":
                         print("Длина пакета", len(msg))
-                        self.sendMsgs(from_user_addr, msg)
+                        
                     else:
                         print("Неизвестный запрос")
-
+                    
+                    # Отправляем звук всем пользователям
+                    self.sendMsgs(from_user_addr, msg)
+                    
                     # отправляем звук пользователю обратно
                     from_user_sock.send(msg)
                 else: continue

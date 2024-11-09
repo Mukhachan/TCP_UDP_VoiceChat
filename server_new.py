@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 import json
 import pickle
 import socket
@@ -47,7 +48,7 @@ class Server:
                     elif msg_dec['event'] == "connect":
                         print(msg_dec)
                     elif msg_dec['event'] == "Message":
-                        print("Длина пакета", len(msg))
+                        pass
                         
                     else:
                         print("Неизвестный запрос")
@@ -72,7 +73,7 @@ class Server:
 
             users_thd = Thread(target=self.checkMsgs, args=(client_socket, client_address))
             users_thd.start()
-            print(f"New connection from {client_address}")
+            print(f"({datetime.now()}) - New connection from {client_address}")
         return True
 
 

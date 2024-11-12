@@ -12,7 +12,6 @@ from os import system
 import sys
 
 
-
 class GetAudio:
     def __init__(self, sock: socket.socket, name: str) -> None:
         self.sock = sock
@@ -28,7 +27,6 @@ class GetAudio:
 
         self.name = name
         self.buffer = ''
-
 
     def get_audio(self):
         """
@@ -62,16 +60,14 @@ class GetAudio:
 
                 elif message['event'] == 'Message':
                     message['data'] = base64.b64decode(message['data'])
-                    print(message)
+                    # print(message)
                     yield message
 
- 
     def main(self):
         for data in self.get_audio():
             if data['data'] != "":
                 if (SOUND_CALLBACK and data['nickname'] == self.name) or data['nickname'] != self.name:
                     self.p_read.write(frames=data['data'], num_frames=data['samplerate'])
-
 
 
 class SendMessages:

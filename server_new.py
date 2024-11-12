@@ -29,7 +29,8 @@ class Server:
         while True:
             try:
                 msg = from_user_sock.recv(CHUNK)
-                if msg: 
+                if msg:
+                    dict(msg)
                     if SEP not in msg:
                         self.buffer += msg
                         continue
@@ -61,7 +62,7 @@ class Server:
                 else: continue
 
             except Exception as e:
-                print(f"Error in checkMsgs: {e}")
+                print(f"Error in checkMsgs: {e.__class__} {e}")
                 if "Connection reset" in str(e) or "roken pipe" in str(e):
                     self.users.remove(from_user_addr)
                     break

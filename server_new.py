@@ -30,7 +30,6 @@ class Server:
             try:
                 msg = from_user_sock.recv(CHUNK)
                 if msg:
-                    dict(msg)
                     if SEP not in msg:
                         self.buffer += msg
                         continue

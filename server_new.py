@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 import pickle
 import socket
+
+import json.scanner
 from config import *
 from threading import Thread
 
@@ -17,7 +19,7 @@ class Server:
         print("Server started")
         self.sock.listen(MAX_CONNECTIONS)
         self.users = []
-        self.buffer = ''
+
 
     def sendMsgs(self, from_user_addr: tuple, data: bytes):
         """ Отправляем сообщения всем подключенным клиентам """
@@ -25,19 +27,20 @@ class Server:
             if  user != from_user_addr:
                 self.sock.sendto(data, user)
 
-    def checkMsgs(self, from_user_sock: socket.socket, from_user_addr: tuple):
+    def checkMsgs(self, from_user_sock: socket.socket, from_user_addr: tuple, buffer: str = ''):
         while True:
             try:
                 msg = from_user_sock.recv(CHUNK)
+                msg = msg.replace("'", "\"").strip()
                 if msg:
                     if SEP not in msg:
-                        self.buffer += msg
+                        buffer += msg
                         continue
                     else:
-                        self.buffer = msg.split(SEP)[1]
+                        buffer = msg.split(SEP)[1]
 
                     msg_dec = json.loads((
-                            self.buffer+msg.split(SEP)[0]
+                            buffer+msg.split(SEP)[0]
                         ).decode("utf-8"))
                     
                     if msg_dec['event'] == "disconnect":
@@ -62,6 +65,7 @@ class Server:
 
             except Exception as e:
                 print(f"Error in checkMsgs: {e.__class__} {e}")
+                print(buffer, msg)
                 if "Connection reset" in str(e) or "roken pipe" in str(e):
                     self.users.remove(from_user_addr)
                     break

@@ -82,20 +82,20 @@ class SendMessages:
         try:
             msg = {
                 "nickname" : self.name,
-                "data" : 1449+len(self.name.encode("utf-8")),
+                "data" : "",
                 "event" : "connect",
             }
             msg = json.dumps(msg).encode("utf-8")+SEP
             self.sock.send(msg)
             return {
                 'Status' : True,
-                'Message' : "Connect message sent"
+                'Message' : 'Connect message sent'
             }
         except Exception as e:
             print(f"Error in `sendConnect`: {e}")
             return {
                 'Status' : False,
-                'Message' : f"Error in `sendConnect`: {e}"
+                'Message' : f'Error in `sendConnect`: {e}'
             }
 
     def sendDisconnect(self) -> dict[bool, str]:
@@ -111,14 +111,14 @@ class SendMessages:
             msg = json.dumps(msg).encode("utf-8")+SEP
             self.sock.send(msg)
             return {
-                'Status' : True,
-                'Message' : "Disconnect message sent"
+                "Status" : True,
+                "Message" : "Disconnect message sent"
             }
         except Exception as e:
             print(f"Error in `sendDisconnect`: {e}")
             return {
-                'Status' : False,
-                'Message' : f"Error in `sendDisconnect`: {e}"
+                "Status" : False,
+                "Message" : f"Error in `sendDisconnect`: {e}"
             }
 
     def sendMessage(self, data_block: bytes) -> dict[bool, str]:
@@ -135,21 +135,23 @@ class SendMessages:
 
             msg = {
             "nickname" : self.name,
-            "data" : base64.b64encode(data_block).decode("utf-8"),
+            "data" : f"{base64.b64encode(data_block).decode('utf-8')}",
             "event" : "Message",
             }
+
             msg = json.dumps(msg).encode("utf-8")+SEP
+            # msg = msg.replace("'", "\"")
             self.sock.send(msg)
 
             return {
-                'Status' : True,
-                'Message' : "Message sent"
+                "Status" : True,
+                "Message" : "Message sent"
             }
         except Exception as e:
-            print(f"Error in `sendMessage`: {e}")
+            print(f"Error in `sendMessage`: {e.__class__} {e}")
             return {
-                'Status' : False,
-                'Message' : f"Error in `sendMessage`: {e}"
+                "Status" : False,
+                "Message" : f"Error in `sendMessage`: {e}"
             }
 
 class RecordAudio:
